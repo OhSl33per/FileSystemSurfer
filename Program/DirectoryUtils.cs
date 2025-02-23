@@ -1,4 +1,3 @@
-using System.Security.Cryptography.X509Certificates;
 
 namespace FileHandler
 {
@@ -56,7 +55,7 @@ namespace FileHandler
 
         public static void ListDirectory(string directory)
         {
-            UserInput type = new UserInput(prompt: "What would you like to see?\n1) Files\n2) Directories");
+            UserInput type = new UserInput(prompt: $"What would you like to see in {directory}?\n1) Files\n2) Directories");
 
             string? userTypeSelection = type.Response;
 

@@ -21,9 +21,9 @@ namespace FileHandler
         }
 
         // Single prompt -- multiple options 
-        public UserInput(string prompt, List<string> options)
+        public UserInput(string prompt, List<string> options, string? directory = "")
         {
-            PromptUserWithOptions(prompt, options);
+            PromptUserWithOptions(prompt, options, directory);
         }
 
         public UserInput(
@@ -42,13 +42,14 @@ namespace FileHandler
             //prompt the user
             Console.WriteLine(prompt);
             string _response = Console.ReadLine() ?? "";
+            Console.Clear();
             if (CheckProgramInerrupt(input: _response))
             {
                 Response = _response;
             }
         }
 
-        private void PromptUserWithOptions(string prompt, List<string> options)
+        private void PromptUserWithOptions(string prompt, List<string> options, string? directory = "")
         {
             //prompt the user
             Console.WriteLine(prompt);
@@ -57,19 +58,13 @@ namespace FileHandler
                 Console.WriteLine($"{i + 1}) {options[i]}");
             }
             string _response = Console.ReadLine() ?? "";
+            Console.Clear();
             if (int.TryParse(_response, out int result))
             {
                 Response = _response;
             }
-            else if (CheckProgramInerrupt(input: _response, directory: options[result]))
-            {
-                Response = _response;
-            }
-            else
-            {
-                Console.WriteLine("OOPS, it appears we've misstepped, exiting application...");
-                Environment.Exit(0);
-            }
+            CheckProgramInerrupt(input: _response, directory: directory);
+            Response = _response;
         }
 
         private void HandleDirectoryTraversal(
@@ -85,23 +80,32 @@ namespace FileHandler
                 Console.WriteLine("What would you like to see?");
                 for (int i = 0; i < fileOptions.Count; i++) Console.WriteLine($"{i + 1}) {fileOptions[i]}");
                 Response = Console.ReadLine();
+                Console.Clear();
                 HandleDirectoryTraversal(originInput: Response, directory, options, callback);
             }
             else if (int.TryParse(originInput, out int result) && result > 0 && result <= fileOptions.Count)
             {
                 List<string> selected = options[fileOptions[result - 1]];
 
-                UserInput userLocationSelection = new UserInput(prompt: "\nPlease choose from the following\n==> Type \"select\" to choose the current directory\n", options: selected);
+                UserInput userLocationSelection = new UserInput(prompt: $"\nPlease choose from the following \"{fileOptions[result - 1]}\"\nCurrent Diretory: {directory}\n==> Type \"select\" to perform additional actions on {directory}\n", options: selected, directory: directory);
 
                 if (int.TryParse(userLocationSelection.Response, out int locResult))
                 {
                     Console.WriteLine($"You selected: {locResult}");
-                    if (locResult > 0 || locResult <= selected.Count) callback?.Invoke(directory: selected[locResult - 1]);
+                    if (locResult > 0 || locResult <= selected.Count)
+                    {
+                        callback?.Invoke(directory: selected[locResult - 1]);
+                    }
                     else
                     {
                         Console.WriteLine("Sorry, that is not a valid option, please try again.");
                         callback?.Invoke(directory: directory);
                     }
+                }
+                else if (Regex.IsMatch(userLocationSelection.Response ?? "", "select", RegexOptions.IgnoreCase))
+                {
+                    new FileActions(directory);
+                    return;
                 }
                 else
                 {

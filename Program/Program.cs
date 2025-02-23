@@ -5,7 +5,9 @@ class Program
     public static void Main()
     {
         Console.WriteLine("Sup Sup! Let's get started!\n");
+        Thread.Sleep(2000);
         Console.WriteLine("You may restart this application at any time by typing \"restart\", \nand exit this application at any time by typing \"exit\" at a prompt\n");
+        Thread.Sleep(2000);
 
         DriveInfo? selectedDrive = DirectoryUtils.GetDrives();
 
