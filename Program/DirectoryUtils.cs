@@ -1,4 +1,6 @@
 
+using System.Text.RegularExpressions;
+
 namespace FileHandler
 {
     public class DirectoryUtils
@@ -38,8 +40,9 @@ namespace FileHandler
 
             while (true)
             {
-                var selectedDrive = Console.ReadLine();
-
+                string? _response = new UserInput().GetUserInput();
+                if (_response == null) return;
+                var selectedDrive = _response;
                 if (int.TryParse(selectedDrive, out int result) && result > 0 && result <= Drives?.Count())
                 {
                     SelectedDrive = result - 1;
@@ -55,7 +58,7 @@ namespace FileHandler
 
         public static void ListDirectory(string directory)
         {
-            UserInput type = new UserInput(prompt: $"What would you like to see in {directory}?\n1) Files\n2) Directories");
+            UserInput type = new UserInput(prompt: $"What would you like to see in {directory}?\n1) Files\n2) Directories", directory: directory);
 
             string? userTypeSelection = type.Response;
 
@@ -72,6 +75,69 @@ namespace FileHandler
                 options: options,
                 ListDirectory
             );
+        }
+
+        /// <summary>
+        /// Simple lists items in the Console
+        /// </summary>
+        public static void ListItems(List<string> items)
+        {
+            Console.WriteLine("\nItems Found: ");
+            foreach (string item in items)
+            {
+                Console.WriteLine(item);
+            }
+            Console.WriteLine("\n");
+        }
+
+        public static List<string> GetFiles(string directory)
+        {
+            string[] fileList = Directory.GetFiles(directory);
+            return fileList.Select(f => Path.GetFileName(f))
+                .ToList();
+        }
+
+        public static bool SearchDirectory(string directory, int searchOption)
+        {
+            string searchPattern;
+            List<string> dirItems = Directory.EnumerateFileSystemEntries(directory).ToList();
+            List<string> foundItems = new List<string>();
+
+            // literal search (partial match) && custom pattern search (regex)
+            if (searchOption == 1 || searchOption == 2)
+            {
+                var prompt = searchOption == 1 ? "What would you like to search for?:" : "Please enter a pattern to perform your search on (more details on patterns can be found at regex101.com)";
+                searchPattern = new UserInput(prompt, directory).Response ?? "";
+            }
+
+            // Pre-defined search list
+            else
+            {
+                searchPattern = @"blu-ray|t\d{2}";
+                Console.WriteLine($"Setting your search pattern to the following pattern: /{searchPattern}/gi");
+            } // will prolly need to refine this list
+
+            foreach (string item in dirItems)
+            {
+                var noDirItem = Path.GetFileName(item);
+                if (searchOption == 0 || searchOption == 2)
+                {
+                    if (Regex.IsMatch(noDirItem, searchPattern, RegexOptions.IgnoreCase))
+                    {
+                        foundItems.Add(noDirItem);
+                    }
+                }
+                else if (searchOption == 1)
+                {
+                    if (noDirItem.Contains(searchPattern, StringComparison.OrdinalIgnoreCase))
+                    {
+                        foundItems.Add(noDirItem);
+                    }
+                }
+            }
+            if (foundItems.Count == 0) Console.WriteLine($"No Items found matching \"{searchPattern}\"\n");
+            else ListItems(foundItems);
+            return true;
         }
     }
 }
