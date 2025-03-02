@@ -13,6 +13,7 @@ namespace FileHandler
         public FileActions(string directory)
         {
             DirectoryPath = directory;
+            FileList = DirectoryUtils.GetFiles(directory);
 
             List<FileActionMethodsModel> actionMethods = new List<FileActionMethodsModel>
             {
@@ -41,8 +42,6 @@ namespace FileHandler
                     Method = () => DirectoryUtils.ListDirectory(DirectoryPath)
                 }
             };
-
-            FileList = DirectoryUtils.GetFiles(directory);
 
             string prompt = $"What would you like to do in {DirectoryPath}?";
             UserInput userInput = new UserInput(prompt: prompt, options: actionMethods.Select(a => a.Name).ToList());
